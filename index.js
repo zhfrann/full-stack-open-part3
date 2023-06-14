@@ -1,7 +1,15 @@
 const express = require('express')
+var morgan = require('morgan')
 const app = express()
 
 app.use(express.json())
+
+morgan.token('req-data', (req, res) => {
+    return JSON.stringify(req.body);
+})
+
+app.use(morgan(`:method :url :status :res[content-length] - :response-time ms :req-data`))
+// app.use(morgan('tiny'))
 
 let persons = [
     {
@@ -85,10 +93,15 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    body.id = generateId();
+    // body.id = generateId();   //! Warning: this code assign new property id to the request body !
+    const newPerson = {
+        id: generateId(),
+        name: body.name,
+        number: body.number
+    }
 
-    persons = persons.concat(body)
-    response.json(body)
+    persons = persons.concat(newPerson)
+    response.json(newPerson)
 })
 
 const PORT = 3001;
