@@ -5,3 +5,7 @@ Content-Type: application/json
     "name": "Budi Santoso",
     "number": "040-243563"
 }
+
+###
+
+DELETE http://localhost:3001/api/persons/3
