@@ -1,7 +1,9 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 var morgan = require('morgan')
 const app = express()
+const Person = require('./models/person')
 
 app.use(express.static('build'))
 app.use(cors())
@@ -50,28 +52,24 @@ const generateId = () => {
 }
 
 app.get('/info', (request, response) => {
-    response.send(`
-    <p>Phonebook has info for ${persons.length} people<p/>
-    <p>${new Date()}<p/>
-    `)
-    console.log(request.headers)
+    Person.countDocuments().then(persons => {
+        response.send(`
+            <p>Phonebook has info for ${persons} people</p>
+            <p>${new Date()}</p>
+        `)
+    })
 })
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Person.find({}).then(persons => {
+        response.json(persons)
+    })
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const person = persons.find(person => person.id === id)
-
-    if (person) {
+    Person.findById(request.params.id).then(person => {
         response.json(person)
-    } else {
-        response.status(404).json({
-            "message": "Person is not found"
-        })
-    }
+    })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
@@ -90,21 +88,21 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    if (persons.find(person => person.name === body.name)) {
-        return response.status(400).json({
-            error: "name must be unique"
-        })
-    }
+    // if (persons.find(person => person.name === body.name)) {
+    //     return response.status(400).json({
+    //         error: "name must be unique"
+    //     })
+    // }
 
     // body.id = generateId();   //! Warning: this code assign new property id to the request body !
-    const newPerson = {
-        id: generateId(),
+    const newPerson = new Person({
         name: body.name,
         number: body.number
-    }
+    })
 
-    persons = persons.concat(newPerson)
-    response.json(newPerson)
+    newPerson.save().then(savedPerson => {
+        response.json(savedPerson)
+    })
 })
 
 const PORT = 3001;
